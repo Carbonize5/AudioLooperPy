@@ -1,3 +1,4 @@
 audioApp.py
 env/*
 text.txt
+__pycache__
