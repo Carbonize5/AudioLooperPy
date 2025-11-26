@@ -11,11 +11,11 @@ class AudioLoopApp(QMainWindow):
         self.settings()
         self.initUI()
         self.event_handler()
+        self.lastTick : int = 0
     
     def settings(self):
         self.setWindowTitle("AudLoop")
         self.mime_type_filters = ["audio/mpeg", "audio/ogg", "audio/wav"]
-
     
     def initUI(self):
         
@@ -60,6 +60,7 @@ class AudioLoopApp(QMainWindow):
 
     def event_handler(self):
         self.load_action.triggered.connect(self.load_audio_file)
+        self.audioPlayer.media_player.positionChanged.connect(self.positionChecker)
         #self.save_state_action.triggered.connect()
         #self.load_state_action.triggered.connect()
     
@@ -78,8 +79,23 @@ class AudioLoopApp(QMainWindow):
             if dialog.selectedFiles():
                 if self.audioPlayer.media_player.source() : self.audioPlayer.media_player.stop()
                 self.audioPlayer.media_player.setSource(QUrl.fromLocalFile(dialog.selectedFiles()[0]))
-                self.tagManager.enableTagManager()
-                self.tagManager.clearAll()
+                self.audioPlayer.media_player.durationChanged.connect(self.setupTagManager)
+    
+    def setupTagManager(self):
+        self.tagManager.enableTagManager(self.audioPlayer.onlyTicks)
+        self.tagManager.clear()
+        self.audioPlayer.media_player.durationChanged.disconnect(self.setupTagManager)
+
+    def positionChecker(self):
+        tick = self.audioPlayer.media_player.position()
+        for tag in self.tagManager.tag_list:
+            if tag[1] and self.audioPlayer.isPlaying and not self.audioPlayer.isDragging and self.lastTick <= tag[0].position <= tick:
+                print(self.lastTick, tag[0].position, tick)
+                tag[0].useTag(self.audioPlayer.media_player)
+                break
+        self.lastTick = tick
+
+
 
 if __name__ in "__main__":
     os.environ['QT_MEDIA_BACKEND'] = "windows"

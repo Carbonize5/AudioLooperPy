@@ -1,3 +1,5 @@
+from PySide6.QtMultimedia import QMediaPlayer
+
 class Tag():
 
     def __init__(self):
@@ -12,14 +14,13 @@ class Tag():
     def setPosition(self, new_pos):
         self.position = new_pos
     
-    def __str__(self):
+    def toUI(self):
         pass
+    
+    def useTag(self, mediaPlayer : QMediaPlayer):
+        print("Tag Used, MediaPlayer: " + mediaPlayer.__str__())
 
 class GoToTag(Tag):
-
-    def __init__(self):
-        super().__init__()
-        self.destination : int = None
     
     def __init__(self, pos : int, dest : int):
         super().__init__(pos)
@@ -31,5 +32,12 @@ class GoToTag(Tag):
     def setDestination(self, new_dest):
         self.destination = new_dest
     
-    def __str__(self):
+    def toUI(self):
         return "At " + str(self.position) + " go to " + str(self.destination)
+
+    def __str__(self):
+        return "GoToTag("+self.position.__str__()+","+self.destination.__str__()+")"
+    
+    def useTag(self, mediaPlayer : QMediaPlayer):
+        # super().useTag(mediaPlayer)
+        mediaPlayer.setPosition(self.destination)

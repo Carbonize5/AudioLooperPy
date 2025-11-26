@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QSlider, QVBoxLayout, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QPushButton, QLineEdit, QLabel, QSlider, QVBoxLayout, QHBoxLayout
+from PySide6.QtGui import QIntValidator
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
@@ -8,8 +9,8 @@ class ClickableSlider(QSlider): # https://github.com/BBC-Esq/Pyside6_PyQt6_video
             value = QSlider.minimum(self) + ((QSlider.maximum(self) - QSlider.minimum(self)) * event.position().x()) / self.width()
             self.setValue(int(value))
             self.sliderPressed.emit()
-            self.sliderMoved.emit(int(value))
-            self.sliderReleased.emit()
+            #self.sliderMoved.emit(int(value)) # I don't want to signal that my cursor is moving if I just clicked.
+            #self.sliderReleased.emit()        # Same but with release
         super().mousePressEvent(event)
 
 
@@ -30,16 +31,18 @@ class AudioPlayer(QWidget):
         #Basic UI elements
         self.btn_play_n_pause = QPushButton("Play")
         self.btn_stop = QPushButton("Stop")
+        self.tick_input = QLineEdit()
+        self.max_tick = QLabel("--")
 
         self.btn_play_n_pause.setDisabled(True)
         self.btn_stop.setDisabled(True)
+        self.tick_input.setDisabled(True)
 
         self.media_slider = ClickableSlider(Qt.Orientation.Horizontal)
         self.media_slider.setMinimum(0)
-        self.media_slider.setMaximum(100)
         self.media_slider.setValue(0)
-        self.media_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self.media_slider.setTickInterval(10)
+        #self.media_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        #self.media_slider.setTickInterval(10)
         self.media_slider.setDisabled(True)
 
         # Specific Audio elements
@@ -52,7 +55,9 @@ class AudioPlayer(QWidget):
         row = QHBoxLayout()
         btn_subrow = QHBoxLayout()
 
-        row.addWidget(self.media_slider)
+        row.addWidget(self.tick_input,1)
+        row.addWidget(self.media_slider,3)
+        row.addWidget(self.max_tick)
 
         btn_subrow.addWidget(self.btn_play_n_pause)
         btn_subrow.addWidget(self.btn_stop)
@@ -63,9 +68,11 @@ class AudioPlayer(QWidget):
 
     def event_handler(self):
         self.media_player.sourceChanged.connect(self.new_audio_file)
+        self.media_player.durationChanged.connect(self.updateDuration)
         self.media_player.positionChanged.connect(self.updateSlider)
         self.media_player.playbackStateChanged.connect(self.isMediaEnded)
         self.media_slider.sliderPressed.connect(self.sliderPressed)
+        self.media_slider.sliderMoved.connect(self.sliderMoved)
         self.media_slider.sliderReleased.connect(self.sliderReleased)
         self.btn_play_n_pause.clicked.connect(self.play_n_pause)
         self.btn_stop.clicked.connect(self.stop)
@@ -73,7 +80,8 @@ class AudioPlayer(QWidget):
     @Slot()
     def updateSlider(self):
         if not self.isDragging: 
-            self.media_slider.setValue(int(self.media_player.position()/float(self.media_player.duration())*100))
+            self.media_slider.setValue(self.media_player.position())
+            self.tick_input.setText(str(self.media_player.position()))
     
     @Slot()
     def isMediaEnded(self):
@@ -88,25 +96,38 @@ class AudioPlayer(QWidget):
     
     @Slot()
     def sliderPressed(self):
-        #print("press the slider")
+        # print("press the slider")
         self.isDragging = True
-        if self.isPlaying:
-            self.media_player.stop()
+        self.media_player.pause()
+        self.media_player.setPosition(self.media_slider.value())
+    
+    def sliderMoved(self, v):
+        self.tick_input.setText(str(v))
+        self.media_player.setPosition(v)
 
     @Slot()
     def sliderReleased(self):
-        #print("release the slider")
+        # print("release the slider")
         self.isDragging = False
-        self.media_player.setPosition(int(self.media_slider.value()/100.*self.media_player.duration()))
+        self.media_player.setPosition(self.media_slider.value())
         if self.isPlaying:
             self.media_player.play()
 
+    def updateDuration(self):
+        total = self.media_player.duration()
+        self.media_slider.setMaximum(total)
+        self.max_tick.setText(str(total))
+        self.onlyTicks = QIntValidator()
+        self.onlyTicks.setRange(0, total)
+        self.tick_input.setValidator(self.onlyTicks)
 
     @Slot()
     def new_audio_file(self):
         self.media_slider.setEnabled(True)
         self.btn_play_n_pause.setEnabled(True)
         self.btn_stop.setDisabled(True)
+        self.tick_input.setEnabled(True)
+        self.tick_input.setText("0")
     
     @Slot()
     def play_n_pause(self):
