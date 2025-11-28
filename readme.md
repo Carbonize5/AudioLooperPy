@@ -1,4 +1,4 @@
-# AudLoop (an audio app to loop around) V0.2.1
+# AudLoop (an audio app to loop around) V0.2.2
 
 This little app can be used to loop a part of an audio file.
 
