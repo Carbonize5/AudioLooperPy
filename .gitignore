@@ -3,3 +3,6 @@ env/*
 text.txt
 __pycache__
 linux_env/*
+build/*
+dist/*
+*.spec
