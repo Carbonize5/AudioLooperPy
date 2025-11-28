@@ -4,6 +4,8 @@ from PySide6.QtCore import Qt, QUrl, QTimer, QTimeLine, Slot, QStandardPaths
 from PySide6.QtGui import QAction
 from audioPlayerClass import AudioPlayer
 from tagManagerClass import TagManager
+from tagClass import Tag, GoToTag
+import json
 
 class AudioLoopApp(QMainWindow):
     def __init__(self):
@@ -33,6 +35,7 @@ class AudioLoopApp(QMainWindow):
 
         self.save_state_action = QAction(self, text="Save State")
         self.save_state_action.setStatusTip("Save your work in a separate file")
+        self.save_state_action.setDisabled(True)
 
         self.load_state_action = QAction(self, text="Load State")
         self.load_state_action.setStatusTip("Load your work from a separate file")
@@ -61,8 +64,8 @@ class AudioLoopApp(QMainWindow):
     def event_handler(self):
         self.load_action.triggered.connect(self.load_audio_file)
         self.audioPlayer.media_player.positionChanged.connect(self.positionChecker)
-        #self.save_state_action.triggered.connect()
-        #self.load_state_action.triggered.connect()
+        self.save_state_action.triggered.connect(self.onSave)
+        self.load_state_action.triggered.connect(self.onLoad)
     
     @Slot()
     def load_audio_file(self):
@@ -82,6 +85,7 @@ class AudioLoopApp(QMainWindow):
                 self.audioPlayer.media_player.durationChanged.connect(self.setupTagManager)
     
     def setupTagManager(self):
+        self.save_state_action.setEnabled(True)
         self.tagManager.enableTagManager(self.audioPlayer.onlyTicks)
         self.tagManager.clear()
         self.audioPlayer.media_player.durationChanged.disconnect(self.setupTagManager)
@@ -94,6 +98,78 @@ class AudioLoopApp(QMainWindow):
                 tag[0].useTag(self.audioPlayer.media_player)
                 break
         self.lastTick = tick
+    
+    def onSave(self):
+        source : QUrl = self.audioPlayer.media_player.source()
+        tag_list : list[list[Tag, bool]] = self.tagManager.tag_list
+        json_tag_list : list[list[dict, bool]] = []
+        for tag_duo in tag_list:
+            tag = tag_duo[0].toPyJSON()
+            json_tag_list.append([tag, tag_duo[1]])
+        pre_json_file : dict = dict()
+        pre_json_file["source"] = source.toString()
+        pre_json_file["tag_list"] = json_tag_list
+        json_file = json.dumps(pre_json_file)
+
+        dialog = QFileDialog(self, "Save File")
+        dialog.setMimeTypeFilters(["application/json"])
+        dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        dialog.setDefaultSuffix("json")
+        dialog.setDirectory(
+            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+        )
+
+        if dialog.exec() == QFileDialog.DialogCode.Accepted:
+            if dialog.selectedFiles():
+                file = open(dialog.selectedFiles()[0],'w')
+                file.write(json_file)
+                file.close()
+
+    def onLoad(self):
+        dialog = QFileDialog(self, "Load File")
+        dialog.setMimeTypeFilters(["application/json"])
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+        dialog.setDefaultSuffix("json")
+        dialog.setDirectory(
+            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+        )
+
+        if dialog.exec() == QFileDialog.DialogCode.Accepted:
+            if dialog.selectedFiles():
+                file = open(dialog.selectedFiles()[0], "r")
+                json_file = file.readlines()
+                json_file = "".join(json_file)
+                file.close()
+
+                self.tagManager.clear()
+                setup = lambda : (self.save_state_action.setEnabled(True),
+                                self.tagManager.enableTagManager(self.audioPlayer.onlyTicks),
+                                self.audioPlayer.media_player.durationChanged.disconnect(setup))
+                self.audioPlayer.media_player.durationChanged.connect(setup)
+                pyJSON_data = json.loads(json_file)
+                self.audioPlayer.media_player.setSource(QUrl(pyJSON_data["source"]))
+
+                tag_list = []
+                index = 0
+                for tag_duo in pyJSON_data["tag_list"]:
+                    match tag_duo[0]["Type"]:
+                        case 0:
+                            tag = Tag(tag_duo[0]["Args"][0])
+                        case 1:
+                            tag = GoToTag(tag_duo[0]["Args"][0], tag_duo[0]["Args"][1])
+                        case _:
+                            print("Oopsie Daisie")
+                            raise ValueError
+                    tag_list.append([tag, tag_duo[1]])
+                    self.tagManager.tag_list_ui.addItem(tag.toUI())
+                    if not tag_duo[1]:
+                        self.tagManager.tag_list_ui.item(index).setBackground(Qt.GlobalColor.red)
+                    index+=1
+
+                self.tagManager.tag_list = tag_list
+                
 
 
 

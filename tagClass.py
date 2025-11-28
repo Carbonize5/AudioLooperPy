@@ -15,7 +15,13 @@ class Tag():
         self.position = new_pos
     
     def toUI(self):
-        pass
+        return "At " + str(self.position)
+
+    def toPyJSON(self) -> dict:
+        d = dict()
+        d["Type"] = 0
+        d["Args"] = [self.position]
+        return d
     
     def useTag(self, mediaPlayer : QMediaPlayer):
         print("Tag Used, MediaPlayer: " + mediaPlayer.__str__())
@@ -34,6 +40,12 @@ class GoToTag(Tag):
     
     def toUI(self):
         return "At " + str(self.position) + " go to " + str(self.destination)
+    
+    def toPyJSON(self) -> dict:
+        d = super().toPyJSON()
+        d["Type"] = 1
+        d["Args"].append(self.destination)
+        return d
 
     def __str__(self):
         return "GoToTag("+self.position.__str__()+","+self.destination.__str__()+")"

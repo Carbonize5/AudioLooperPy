@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QLineEdit, QLabel, QSlider, QVBoxLayout, QHBoxLayout
 from PySide6.QtGui import QIntValidator
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, Slot, Signal, SignalInstance
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 class ClickableSlider(QSlider): # https://github.com/BBC-Esq/Pyside6_PyQt6_video_audio_player
@@ -12,6 +12,17 @@ class ClickableSlider(QSlider): # https://github.com/BBC-Esq/Pyside6_PyQt6_video
             #self.sliderMoved.emit(int(value)) # I don't want to signal that my cursor is moving if I just clicked.
             #self.sliderReleased.emit()        # Same but with release
         super().mousePressEvent(event)
+
+class FocusLineEdit(QLineEdit):
+    signalFocusChanged = Signal(bool)
+    
+    def focusInEvent(self, arg__1):
+        self.signalFocusChanged.emit(True)
+        return super().focusInEvent(arg__1)
+    
+    def focusOutEvent(self, arg__1):
+        self.signalFocusChanged.emit(False)
+        return super().focusOutEvent(arg__1)
 
 
 class AudioPlayer(QWidget):
@@ -31,7 +42,7 @@ class AudioPlayer(QWidget):
         #Basic UI elements
         self.btn_play_n_pause = QPushButton("Play")
         self.btn_stop = QPushButton("Stop")
-        self.tick_input = QLineEdit()
+        self.tick_input = FocusLineEdit()
         self.max_tick = QLabel("--")
 
         self.btn_play_n_pause.setDisabled(True)
@@ -76,6 +87,8 @@ class AudioPlayer(QWidget):
         self.media_slider.sliderReleased.connect(self.sliderReleased)
         self.btn_play_n_pause.clicked.connect(self.play_n_pause)
         self.btn_stop.clicked.connect(self.stop)
+        self.tick_input.signalFocusChanged.connect(self.onFocus)
+        self.tick_input.returnPressed.connect(self.jump)
     
     @Slot()
     def updateSlider(self):
@@ -91,8 +104,7 @@ class AudioPlayer(QWidget):
             self.isPlaying = False
             self.btn_play_n_pause.setText("Play")
         else:
-            self.btn_stop.setEnabled(True)
-        
+            self.btn_stop.setEnabled(True)  
     
     @Slot()
     def sliderPressed(self):
@@ -128,6 +140,7 @@ class AudioPlayer(QWidget):
         self.btn_stop.setDisabled(True)
         self.tick_input.setEnabled(True)
         self.tick_input.setText("0")
+        self.tick_input.clearFocus()
     
     @Slot()
     def play_n_pause(self):
@@ -139,7 +152,6 @@ class AudioPlayer(QWidget):
             self.btn_play_n_pause.setText("Play")
         self.isPlaying = not self.isPlaying
         self.btn_stop.setEnabled(True)
-        
     
     @Slot()
     def stop(self):
@@ -149,3 +161,18 @@ class AudioPlayer(QWidget):
         self.media_player.setPosition(0)
 
         self.btn_stop.setDisabled(True)
+    
+    def onFocus(self, focus):
+        if focus and self.media_player.isPlaying():
+            self.media_player.pause()
+            self.btn_play_n_pause.setText("Play")
+            self.isPlaying = not self.isPlaying
+            self.btn_stop.setEnabled(True)
+    
+    def jump(self):
+        value : int
+        if not self.tick_input.hasAcceptableInput():
+            value = abs(int(self.tick_input.text()))
+            self.tick_input.setText(value%self.onlyTicks.top())
+        else: value = int(self.tick_input.text())
+        self.media_player.setPosition(value)
