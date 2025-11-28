@@ -94,7 +94,7 @@ class AudioLoopApp(QMainWindow):
         tick = self.audioPlayer.media_player.position()
         for tag in self.tagManager.tag_list:
             if tag[1] and self.audioPlayer.isPlaying and not self.audioPlayer.isDragging and self.lastTick <= tag[0].position <= tick:
-                print(self.lastTick, tag[0].position, tick)
+                # print(self.lastTick, tag[0].position, tick)
                 tag[0].useTag(self.audioPlayer.media_player)
                 break
         self.lastTick = tick
@@ -168,7 +168,9 @@ class AudioLoopApp(QMainWindow):
                         self.tagManager.tag_list_ui.item(index).setBackground(Qt.GlobalColor.red)
                     index+=1
 
-                self.tagManager.tag_list = tag_list
+                if tag_list:
+                    self.tagManager.tag_list = tag_list
+                    self.tagManager.btn_clearTag.setEnabled(True)
                 
 
 

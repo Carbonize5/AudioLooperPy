@@ -86,6 +86,8 @@ class TagManager(QWidget):
             self.tag_list[index] = [new_tag, active_tag[1]]
             self.tag_list_ui.takeItem(index)
             self.tag_list_ui.insertItem(index, new_tag.toUI())
+            if not active_tag[1]:
+                self.tag_list_ui.item(index).setBackground(Qt.GlobalColor.red)
     
     def deleteTag(self):
         index = self.tag_list_ui.currentRow()
@@ -118,7 +120,7 @@ class TagManager(QWidget):
     
     def onOffTag(self, item : QListWidgetItem):
         index = self.tag_list_ui.indexFromItem(item).row()
-        print(index)
+        # print(index)
         self.tag_list[index][1] = not self.tag_list[index][1]
         if not self.tag_list[index][1]:
             item.setBackground(Qt.GlobalColor.red)

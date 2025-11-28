@@ -1,4 +1,4 @@
-# AudLoop (an audio app to loop around) V0.2.0
+# AudLoop (an audio app to loop around) V0.2.1
 
 This little app can be used to loop a part of an audio file.
 
@@ -20,7 +20,7 @@ Add Sound manipulation tags
 
 ## Tech & Libraries
 
-Python3 (3.13.9)
+[Python3](https://www.python.org/) (3.13.9)
 
-PySide6 (6.10.1)
+[PySide6](https://doc.qt.io/qtforpython-6/) (6.10.1)
 
