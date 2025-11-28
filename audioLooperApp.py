@@ -175,9 +175,3 @@ class AudioLoopApp(QMainWindow):
 
 
 
-if __name__ in "__main__":
-    os.environ['QT_MEDIA_BACKEND'] = "windows"
-    app = QApplication([])
-    main = AudioLoopApp()
-    main.show()
-    app.exec()
