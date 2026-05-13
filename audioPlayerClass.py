@@ -3,6 +3,8 @@ from PySide6.QtGui import QIntValidator
 from PySide6.QtCore import Qt, Slot, Signal, SignalInstance
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
+from audioWaveTimelineClass import AudioWaveTimeline
+
 class ClickableSlider(QSlider): # https://github.com/BBC-Esq/Pyside6_PyQt6_video_audio_player
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -16,13 +18,13 @@ class ClickableSlider(QSlider): # https://github.com/BBC-Esq/Pyside6_PyQt6_video
 class FocusLineEdit(QLineEdit):
     signalFocusChanged = Signal(bool)
     
-    def focusInEvent(self, arg__1):
+    def focusInEvent(self, event):
         self.signalFocusChanged.emit(True)
-        return super().focusInEvent(arg__1)
+        return super().focusInEvent(event)
     
-    def focusOutEvent(self, arg__1):
+    def focusOutEvent(self, event):
         self.signalFocusChanged.emit(False)
-        return super().focusOutEvent(arg__1)
+        return super().focusOutEvent(event)
 
 
 class AudioPlayer(QWidget):
@@ -60,11 +62,13 @@ class AudioPlayer(QWidget):
         self.audio_output = QAudioOutput()
         self.media_player = QMediaPlayer()
         self.media_player.setAudioOutput(self.audio_output)
+        self.audio_graph = AudioWaveTimeline()
 
         # Layout
         self.master_layout = QVBoxLayout()
         row = QHBoxLayout()
         btn_subrow = QHBoxLayout()
+        graph_bottom_row = QHBoxLayout()
 
         row.addWidget(self.tick_input,1)
         row.addWidget(self.media_slider,3)
@@ -73,8 +77,11 @@ class AudioPlayer(QWidget):
         btn_subrow.addWidget(self.btn_play_n_pause)
         btn_subrow.addWidget(self.btn_stop)
 
+        graph_bottom_row.addWidget(self.audio_graph)
+
         self.master_layout.addLayout(row)
         self.master_layout.addLayout(btn_subrow)
+        self.master_layout.addLayout(graph_bottom_row)
         self.setLayout(self.master_layout)
 
     def event_handler(self):
@@ -95,6 +102,7 @@ class AudioPlayer(QWidget):
         if not self.isDragging: 
             self.media_slider.setValue(self.media_player.position())
             self.tick_input.setText(str(self.media_player.position()))
+            self.audio_graph.updateCursor(self.media_player.position())
     
     @Slot()
     def isMediaEnded(self):
@@ -112,16 +120,19 @@ class AudioPlayer(QWidget):
         self.isDragging = True
         self.media_player.pause()
         self.media_player.setPosition(self.media_slider.value())
+        self.audio_graph.updateCursor(self.media_player.position())
     
     def sliderMoved(self, v):
         self.tick_input.setText(str(v))
         self.media_player.setPosition(v)
+        self.audio_graph.updateCursor(self.media_player.position())
 
     @Slot()
     def sliderReleased(self):
         # print("release the slider")
         self.isDragging = False
         self.media_player.setPosition(self.media_slider.value())
+        self.audio_graph.updateCursor(self.media_player.position())
         if self.isPlaying:
             self.media_player.play()
 
@@ -141,6 +152,8 @@ class AudioPlayer(QWidget):
         self.tick_input.setEnabled(True)
         self.tick_input.setText("0")
         self.tick_input.clearFocus()
+        self.audio_graph.extract_waveform(self.media_player.source().path())
+        self.audio_graph.drawWaveform()
     
     @Slot()
     def play_n_pause(self):

@@ -1,9 +1,6 @@
 from PySide6.QtMultimedia import QMediaPlayer
 
 class Tag():
-
-    def __init__(self):
-        self.position : int = None
     
     def __init__(self, pos : int):
         self.position : int = pos

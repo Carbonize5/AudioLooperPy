@@ -6,3 +6,4 @@ linux_env/*
 build/*
 dist/*
 *.spec
+.idea

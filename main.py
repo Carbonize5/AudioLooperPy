@@ -6,7 +6,7 @@ from audioLooperApp import AudioLoopApp
 
 if __name__ in "__main__":
     #pprint.pprint(dict(os.environ), width=1)
-    if platform=="linux":
+    if platform == "linux":
         os.environ['QT_MEDIA_BACKEND'] = "ffmpeg"
     elif platform == "darwin":
         os.environ['QT_MEDIA_BACKEND'] = "darwin"
