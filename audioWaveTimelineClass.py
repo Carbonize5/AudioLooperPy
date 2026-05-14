@@ -10,52 +10,49 @@ class AudioWaveTimeline(QLabel):
         self.settings()
         self.painter : QPainter = QPainter()
         self.setPixmap(QPixmap(500, 100))
-        self.graph_scene = None
         self.waveform_graph = None
         self.rescale_waveform_graph = None
+        self.tick : int = 0
         print(self.size().width(), self.size().height())
         self.data : dict = {}
         self.initUI()
         # self.event_handler()
 
     def settings(self):
-        pass
         self.setMinimumSize(500,100)
-        #self.setBaseSize(500,50)
-        #self.setMaximumSize(500,50)
 
     def initUI(self):
         self.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        scene = self.pixmap()
+        scene = QPixmap(500, 100)
         self.clear_scene(scene)
         self.setPixmap(scene)
 
-    def event_handler(self):
-        pass
-
     def resizeEvent(self, event: QResizeEvent):
-        new_pixmap = QPixmap(self.width(), self.height())
-        self.clear_scene(new_pixmap)
+        self.rescale_waveform_graph = QPixmap(self.width(), self.height())
+        self.clear_scene(self.rescale_waveform_graph)
         if self.waveform_graph and not self.waveform_graph.isNull() and self.data != {}:
-            scaled = self.waveform_graph.scaled(
-                self.width(),
-                self.height(),
-                Qt.AspectRatioMode.IgnoreAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-            painter = QPainter(new_pixmap)
-            x = (new_pixmap.width() - scaled.width()) // 2
-            y = (new_pixmap.height() - scaled.height()) // 2
-            painter.drawPixmap(x, y, scaled)
-            painter.end()
+            self.update_rescale_waveform()
+            self.setPixmap(self.rescale_waveform_graph)
+            self.updateCursor(self.tick)
         else:
             self.waveform_graph = QPixmap(500, 100)
-        self.rescale_waveform_graph = new_pixmap
-        self.setPixmap(new_pixmap)
+            self.setPixmap(self.rescale_waveform_graph)
 
+    def update_rescale_waveform(self):
+        scaled = self.waveform_graph.scaled(
+            self.width(),
+            self.height(),
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        painter = QPainter(self.rescale_waveform_graph)
+        x = (self.rescale_waveform_graph.width() - scaled.width()) // 2
+        y = (self.rescale_waveform_graph.height() - scaled.height()) // 2
+        painter.drawPixmap(x, y, scaled)
+        painter.end()
 
     def drawWaveform(self):
         self.clear_scene(self.waveform_graph)
@@ -68,28 +65,24 @@ class AudioWaveTimeline(QLabel):
             Ypix : int = int((self.data["waveform"][pos]+1) * self.waveform_graph.size().height())//2
             self.painter.drawLine(QPoint(Xpix, Ypix), QPoint(Xpix, Ypix))
         self.painter.end()
-        self.refreshGraph(self.waveform_graph)
+        self.update_rescale_waveform()
+        self.tick = 0
+        self.updateCursor(self.tick)
 
-        self.update()
-
-    def refreshGraph(self, graph):
-        scene = self.pixmap()
-        self.painter.begin(scene)
-        self.painter.drawPixmap(0, 0, graph)
-        self.painter.end()
-        self.setPixmap(scene)
-        self.update()
 
     def updateCursor(self, time:int):
+        self.tick = time
         duration : int = int(self.data["duration"]*1000)
-        pix = int(time*self.rescale_waveform_graph.size().width()/duration)
-        self.refreshGraph(self.rescale_waveform_graph)
-        scene = self.pixmap()
+        pix = int(time*self.size().width()/duration)
+
+        scene = QPixmap(self.size().width(), self.size().height())
         self.painter.begin(scene)
+        self.painter.drawPixmap(0, 0, self.rescale_waveform_graph)
         pen: QPen = QPen(Qt.GlobalColor.red)
         self.painter.setPen(pen)
-        self.painter.drawLine(QPoint(pix,0), QPoint(pix,scene.size().height()))
+        self.painter.drawLine(QPoint(pix,0), QPoint(pix,self.size().height()))
         self.painter.end()
+
         self.setPixmap(scene)
 
         self.update()

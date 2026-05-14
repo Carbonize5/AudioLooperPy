@@ -4,12 +4,14 @@ from tagClass import Tag, GoToTag
 
 class TagSetterDialog(QDialog):
     
-    def __init__(self, validator : QValidator, tag:Tag = None):
+    def __init__(self, validator : QValidator, tag:Tag = None, current_tick:int = None):
         super().__init__()
         if tag: self.setWindowTitle("Modify Tag")
-        else: self.setWindowTitle("Create Tag")
+        elif current_tick: self.setWindowTitle("Create Tag")
+        else: assert False #Make it crash
         self.validator : QIntValidator = validator
         self.tag : Tag = tag
+        self.current_tick : int = current_tick
         self.initUI()
         
     
@@ -43,7 +45,7 @@ class TagSetterDialog(QDialog):
             self.editPosition.setText(tag.getPosition().__str__())
             self.editPositionAlt.setText(tag.getDestination().__str__())
         else:
-            self.editPosition.setText("0")
+            self.editPosition.setText(str(self.current_tick))
             self.editPositionAlt.setText("0")
 
         # Layout

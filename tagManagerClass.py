@@ -1,12 +1,13 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QComboBox, QLineEdit, QLabel, QListWidget, QListWidgetItem, QDialog, QDialogButtonBox, QMessageBox, QSlider, QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Qt, QUrl, Slot, QStandardPaths
 from PySide6.QtGui import QValidator
+
 from tagClass import GoToTag, Tag
 from tagSetterDialogClass import TagSetterDialog
 
 class TagManager(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.settings()
         self.initUI()
         self.event_handler()
@@ -67,7 +68,7 @@ class TagManager(QWidget):
         self.btn_modifyTag.setEnabled(True)
     
     def addTagDialog(self):
-        dial = TagSetterDialog(self.validator)
+        dial = TagSetterDialog(self.validator, current_tick=self.parent().audioPlayer.media_player.position())
         if dial.exec():
             new_tag = dial.tag
             self.tag_list.append([new_tag, True])

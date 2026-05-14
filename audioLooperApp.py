@@ -25,7 +25,7 @@ class AudioLoopApp(QMainWindow):
         self.audioPlayer = AudioPlayer()
 
         # Tag Manager
-        self.tagManager = TagManager()
+        self.tagManager = TagManager(parent=self)
 
         # App Layout
 
