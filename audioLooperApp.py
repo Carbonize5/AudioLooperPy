@@ -5,6 +5,8 @@ from PySide6.QtGui import QAction
 from audioPlayerClass import AudioPlayer
 from tagManagerClass import TagManager
 from tagClass import Tag, GoToTag
+from HelpDialogClass import HelpDialog
+from AboutDialogClass import AboutDialog
 import json
 
 class AudioLoopApp(QMainWindow):
@@ -40,11 +42,21 @@ class AudioLoopApp(QMainWindow):
         self.load_state_action = QAction(self, text="Load State")
         self.load_state_action.setStatusTip("Load your work from a separate file")
 
+        self.open_help_window_action = QAction(self, text="? Help")
+        self.open_help_window_action.setStatusTip("Open the help window")
+
+        self.about_action = QAction(self, text="About")
+        self.about_action.setStatusTip("Open the about window")
+
         menu = self.menuBar()
         file_menu = menu.addMenu("File")
         file_menu.addAction(self.load_action)
         file_menu.addAction(self.save_state_action)
         file_menu.addAction(self.load_state_action)
+
+        help_menu = menu.addMenu("Help")
+        help_menu.addAction(self.open_help_window_action)
+        help_menu.addAction(self.about_action)
 
         ## Central Widget
         self.setCentralWidget(self.tagManager)
@@ -66,6 +78,8 @@ class AudioLoopApp(QMainWindow):
         self.audioPlayer.media_player.positionChanged.connect(self.positionChecker)
         self.save_state_action.triggered.connect(self.onSave)
         self.load_state_action.triggered.connect(self.onLoad)
+        self.open_help_window_action.triggered.connect(self.open_help_window)
+        self.about_action.triggered.connect(self.open_about_window)
     
     @Slot()
     def load_audio_file(self):
@@ -172,6 +186,12 @@ class AudioLoopApp(QMainWindow):
                     self.tagManager.tag_list = tag_list
                     self.tagManager.btn_clearTag.setEnabled(True)
                 
+    def open_help_window(self):
+        dialog = HelpDialog(self)
+        dialog.exec()
 
+    def open_about_window(self):
+        dialog = AboutDialog(self)
+        dialog.exec()
 
 

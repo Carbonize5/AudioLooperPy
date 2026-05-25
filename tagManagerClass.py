@@ -68,7 +68,8 @@ class TagManager(QWidget):
         self.btn_modifyTag.setEnabled(True)
     
     def addTagDialog(self):
-        dial = TagSetterDialog(self.validator, current_tick=self.parent().audioPlayer.media_player.position())
+        tick = self.parent().audioPlayer.media_player.position()
+        dial = TagSetterDialog(self.validator, current_tick=tick)
         if dial.exec():
             new_tag = dial.tag
             self.tag_list.append([new_tag, True])

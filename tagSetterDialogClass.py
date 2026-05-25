@@ -6,9 +6,11 @@ class TagSetterDialog(QDialog):
     
     def __init__(self, validator : QValidator, tag:Tag = None, current_tick:int = None):
         super().__init__()
-        if tag: self.setWindowTitle("Modify Tag")
-        elif current_tick: self.setWindowTitle("Create Tag")
-        else: assert False #Make it crash
+        if tag and current_tick:
+            assert False #Make it crash
+        if tag is not None: self.setWindowTitle("Modify Tag")
+        elif current_tick is not None: self.setWindowTitle("Create Tag")
+        else: assert False #Make it crash 2
         self.validator : QIntValidator = validator
         self.tag : Tag = tag
         self.current_tick : int = current_tick

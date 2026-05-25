@@ -1,0 +1,19 @@
+{"Subjects":
+  ["Load an audio file",
+    "Save a project",
+    "Load a project",
+    "Add a Tag",
+    "Modify a Tag",
+    "Delete a Tag or all",
+    "Disable a Tag",
+    "The Tag List"],
+  "Explanations":
+  ["You can load an audio file by clicking on the \"File\" button in the menu bar and then on \"Load File\".",
+    "You can save an audio configuration with all its tags by clicking on the \"File\" button in the menu bar and then on \"Save State\".",
+    "You can load an audio configuration with all its tags by clicking on the \"File\" button in the menu bar and then on \"Load State\".",
+    "You can add a tag to play another portion of your file by clicking on the \"Add Tag\" button.",
+    "You can modify tag's parameters by clicking on the \"Modify Tag\" button.",
+    "You can delete a tag by clicking on the \"Delete Tag\" button or all of them by clicking on the \"Clear Tag List\" button.",
+    "You can disable a tag by double clicking a tag in the list.",
+    "The tag list contain all your tags for your audio file. When you play the file, the tags are read from top to bottom."]
+}
