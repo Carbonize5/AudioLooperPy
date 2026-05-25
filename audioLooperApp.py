@@ -188,10 +188,10 @@ class AudioLoopApp(QMainWindow):
                 
     def open_help_window(self):
         dialog = HelpDialog(self)
-        dialog.exec()
+        dialog.open()
 
     def open_about_window(self):
         dialog = AboutDialog(self)
-        dialog.exec()
+        dialog.open()
 
 

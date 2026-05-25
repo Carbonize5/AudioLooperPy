@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QComboBox, QLineEdit, QLabel, QListWidget, QListWidgetItem, QDialog, \
     QDialogButtonBox, QMessageBox, QSlider, QVBoxLayout, QHBoxLayout, QTextEdit
 import json
+import os
+import sys
 
 class HelpDialog(QDialog):
     
@@ -46,7 +48,10 @@ class HelpDialog(QDialog):
         self.load_help_list()
 
     def load_help_list(self):
-        file = open("data/help_dialog_subject.json", "r")
+        if getattr(sys, 'frozen', False):
+            file = open(file=os.path.join(sys._MEIPASS, 'data/help_dialog_subject.json'), mode='r')
+        else:
+            file = open('data/help_dialog_subject.json', "r")
         json_file = file.readlines()
         json_file = "".join(json_file)
         file.close()
